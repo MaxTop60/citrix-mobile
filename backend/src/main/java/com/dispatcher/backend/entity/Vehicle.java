@@ -24,6 +24,10 @@ public class Vehicle {
   @Column(name = "current_fuel_level")
   private Double currentFuelLevel;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "client_id", nullable = true)
+  private Client client;
+
   // Конструкторы
   public Vehicle() {
   }
@@ -72,5 +76,13 @@ public class Vehicle {
 
   public void setCurrentFuelLevel(Double currentFuelLevel) {
     this.currentFuelLevel = currentFuelLevel;
+  }
+
+  public Client getClient() {
+    return client;
+  }
+
+  public void setClient(Client client) {
+    this.client = client;
   }
 }
