@@ -13,8 +13,9 @@ public class Event {
   @Column(name = "event_id", updatable = false, nullable = false)
   private UUID eventId;
 
-  @Column(name = "vehicle_id", nullable = false)
-  private UUID vehicleId;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "vehicle_id", nullable = true)
+  private Vehicle vehicle;
 
   @Column(name = "event_type", nullable = false, length = 50)
   private String eventType;
@@ -37,6 +38,9 @@ public class Event {
   @Column(name = "sensor_value")
   private Double sensorValue;
 
+  @Column(name = "threshold_value")
+  private Double thresholdValue;
+
   @Column(name = "description", columnDefinition = "TEXT")
   private String description;
 
@@ -44,9 +48,9 @@ public class Event {
   public Event() {
   }
 
-  public Event(UUID vehicleId, String eventType, String priority,
+  public Event(Vehicle vehicle, String eventType, String priority,
       Double latitude, Double longitude, String description) {
-    this.vehicleId = vehicleId;
+    this.vehicle = vehicle;
     this.eventType = eventType;
     this.priority = priority;
     this.latitude = latitude;
@@ -63,12 +67,12 @@ public class Event {
     this.eventId = eventId;
   }
 
-  public UUID getVehicleId() {
-    return vehicleId;
+  public Vehicle getVehicle() {
+    return vehicle;
   }
 
-  public void setVehicleId(UUID vehicleId) {
-    this.vehicleId = vehicleId;
+  public void setVehicle(Vehicle vehicle) {
+    this.vehicle = vehicle;
   }
 
   public String getEventType() {
@@ -125,6 +129,14 @@ public class Event {
 
   public void setSensorValue(Double sensorValue) {
     this.sensorValue = sensorValue;
+  }
+
+  public Double getThresholdValue() {
+    return thresholdValue;
+  }
+
+  public void setThresholdValue(Double thresholdValue) {
+    this.thresholdValue = thresholdValue;
   }
 
   public String getDescription() {

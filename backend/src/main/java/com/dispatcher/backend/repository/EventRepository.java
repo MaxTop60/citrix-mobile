@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, UUID> {
-  List<Event> findByVehicleId(UUID vehicleId);
+  List<Event> findByVehicle_VehicleId(UUID vehicleId);
 
   List<Event> findByStatus(String status);
 

@@ -25,7 +25,7 @@ public class EventService {
 
   // Получить события по транспортному средству
   public List<Event> getEventsByVehicle(UUID vehicleId) {
-    return eventRepository.findByVehicleId(vehicleId);
+    return eventRepository.findByVehicle_VehicleId(vehicleId);
   }
 
   // Получить события по статусу
