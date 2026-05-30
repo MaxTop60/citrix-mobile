@@ -2,95 +2,83 @@ package com.dispatcher.backend.controller;
 
 import com.dispatcher.backend.dto.CommandDto;
 import com.dispatcher.backend.dto.SendCommandRequest;
+import com.dispatcher.backend.entity.Command;
+import com.dispatcher.backend.service.CommandService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/commands")
 public class CommandController {
 
-    // Временное хранилище команд в памяти
-    // TODO: Реализовать реальное хранилище команд
-    private final List<CommandDto> commands = new ArrayList<>();
+    @Autowired
+    private CommandService commandService;
 
-    public CommandController() {
-        // Тестовая команду при старте
-        commands.add(new CommandDto(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            "DELIVERED",
-            "SMS",
-            "Проверьте уровень топлива",
-            LocalDateTime.now().minusMinutes(10),
-            LocalDateTime.now().minusMinutes(8),
-            null
-        ));
-        commands.add(new CommandDto(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            "SENT",
-            "TELEGRAM",
-            "Превышение скорости, снизьте скорость",
-            LocalDateTime.now().minusMinutes(5),
-            null,
-            null
-        ));
+    // Конвертация Entity → DTO
+    private CommandDto convertToDto(Command command) {
+        CommandDto dto = new CommandDto();
+        dto.setCommandId(command.getCommandId());
+        if (command.getEvent() != null) {
+            dto.setEventId(command.getEvent().getEventId());
+        }
+        dto.setMessage(command.getMessage());
+        dto.setChannel(command.getChannel());
+        dto.setStatus(command.getStatus());
+        dto.setSentAt(command.getSentAt());
+        dto.setDeliveredAt(command.getDeliveredAt());
+        dto.setErrorMessage(command.getErrorMessage());
+        return dto;
     }
 
     // GET /api/commands — получить все команды
     @GetMapping
     public List<CommandDto> getAllCommands() {
-        return commands;
+        return commandService.getAllCommands().stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     // GET /api/commands/{id} — получить команду по ID
     @GetMapping("/{id}")
     public CommandDto getCommandById(@PathVariable UUID id) {
-        return commands.stream()
-            .filter(cmd -> cmd.getCommandId().equals(id))
-            .findFirst()
-            .orElse(null);
+        Command command = commandService.getCommandById(id);
+        return command != null ? convertToDto(command) : null;
     }
 
-    // POST /api/commands — отправить команду водителю
+    // GET /api/commands/event/{eventId} — получить команды по событию
+    @GetMapping("/event/{eventId}")
+    public List<CommandDto> getCommandsByEvent(@PathVariable UUID eventId) {
+        return commandService.getCommandsByEvent(eventId).stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    // POST /api/commands — отправить команду
     @PostMapping
     public CommandDto sendCommand(@RequestBody SendCommandRequest request) {
-        // TODO: Здесь будет бизнес-логика отправки команды
-        
-        // Поиск события 
-        // Симуляция успешной отправки
-        // TODO: Реализовать реальную отправку
-        
-        CommandDto newCommand = new CommandDto();
-        newCommand.setCommandId(UUID.randomUUID());
-        newCommand.setEventId(request.getEventId());
-        newCommand.setStatus("SENT");  // Начальный статус
-        newCommand.setChannel(request.getChannel());
-        
-        // Формируем сообщение
-        String message = "Команда по событию " + request.getEventId();
-        if (request.getCustomComment() != null && !request.getCustomComment().isEmpty()) {
-            message += ". Комментарий: " + request.getCustomComment();
-        }
-        newCommand.setMessage(message);
-        newCommand.setSentAt(LocalDateTime.now());
-        
-        // Симуляция доставки 
-        newCommand.setDeliveredAt(LocalDateTime.now().plusSeconds(2));
-        newCommand.setStatus("DELIVERED");
-        
-        commands.add(0, newCommand);
-        return newCommand;
+        Command saved = commandService.sendCommand(
+                request.getEventId(),
+                request.getMessage(),
+                request.getChannel());
+        return convertToDto(saved);
     }
 
-    // DELETE /api/commands/{id} — отменить/удалить команду
+    // PUT /api/commands/{id}/status — обновить статус команды
+    @PutMapping("/{id}/status")
+    public CommandDto updateCommandStatus(@PathVariable UUID id, @RequestParam String status,
+            @RequestParam(required = false) String errorMessage) {
+        Command updated = commandService.updateCommandStatus(id, status, errorMessage);
+        return updated != null ? convertToDto(updated) : null;
+    }
+
+    // DELETE /api/commands/{id} — удалить команду
     @DeleteMapping("/{id}")
     public String deleteCommand(@PathVariable UUID id) {
-        boolean removed = commands.removeIf(cmd -> cmd.getCommandId().equals(id));
-        return removed ? "Команда удалена" : "Команда не найдена";
+        commandService.deleteCommand(id);
+        return "Команда удалена";
     }
 }
