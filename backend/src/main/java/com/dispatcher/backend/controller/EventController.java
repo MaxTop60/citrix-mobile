@@ -1,81 +1,83 @@
 package com.dispatcher.backend.controller;
 
-import com.dispatcher.backend.dto.CommandDto;
 import com.dispatcher.backend.dto.EventDto;
+import com.dispatcher.backend.entity.Event;
+import com.dispatcher.backend.service.EventService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
 
-  // TODO: Заменить на реальную БД
-  private final List<EventDto> events = new ArrayList<>();
+  @Autowired
+  private EventService eventService;
 
-  public EventController() {
-    // Тестовые события при старте
-    events.add(new EventDto(
-        UUID.randomUUID(),
-        "FUEL_DROP",
-        "CRITICAL",
-        "NEW",
-        LocalDateTime.now().minusMinutes(5),
-        55.751244,
-        37.618423,
-        "Резкое падение уровня топлива на 15 литров за 3 минуты"));
-    events.add(new EventDto(
-        UUID.randomUUID(),
-        "SPEED_EXCEED",
-        "HIGH",
-        "NEW",
-        LocalDateTime.now().minusMinutes(15),
-        55.751244,
-        37.618423,
-        "Превышение скорости: 95 км/ч при лимите 60 км/ч"));
-    events.add(new EventDto(
-        UUID.randomUUID(),
-        "LONG_IDLE",
-        "MEDIUM",
-        "IN_PROGRESS",
-        LocalDateTime.now().minusHours(2),
-        55.751244,
-        37.618423,
-        "Длительный простой более 30 минут"));
+  // Конвертация Entity → DTO
+  private EventDto convertToDto(Event event) {
+    return new EventDto(
+        event.getEventId(),
+        event.getEventType(),
+        event.getPriority(),
+        event.getStatus(),
+        event.getTimestamp(),
+        event.getLatitude(),
+        event.getLongitude(),
+        event.getDescription());
   }
 
   // GET /api/events — получить все события
   @GetMapping
   public List<EventDto> getAllEvents() {
-    return events;
+    return eventService.getAllEvents().stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   // GET /api/events/{id} — получить событие по ID
   @GetMapping("/{id}")
   public EventDto getEventById(@PathVariable UUID id) {
-    return events.stream()
-        .filter(event -> event.getEventId().equals(id))
-        .findFirst()
-        .orElse(null);
+    Event event = eventService.getEventById(id);
+    return event != null ? convertToDto(event) : null;
+  }
+
+  // GET /api/events/status/{status} — получить события по статусу
+  @GetMapping("/status/{status}")
+  public List<EventDto> getEventsByStatus(@PathVariable String status) {
+    return eventService.getEventsByStatus(status).stream()
+        .map(this::convertToDto)
+        .collect(Collectors.toList());
   }
 
   // POST /api/events — создать новое событие
   @PostMapping
-  public EventDto createEvent(@RequestBody EventDto newEvent) {
-    newEvent.setEventId(UUID.randomUUID());
-    newEvent.setTimestamp(LocalDateTime.now());
-    events.add(0, newEvent);
-    return newEvent;
+  public EventDto createEvent(@RequestBody EventDto eventDto) {
+    Event event = new Event(
+        null, // vehicleId пока null
+        eventDto.getEventType(),
+        eventDto.getPriority(),
+        eventDto.getLatitude(),
+        eventDto.getLongitude(),
+        eventDto.getDescription());
+    Event saved = eventService.createEvent(event);
+    return convertToDto(saved);
   }
 
-  // GET /api/events/{id}/commands — получить команды по событию
-  @GetMapping("/{id}/commands")
-  public List<CommandDto> getCommandsByEvent(@PathVariable UUID id) {
-    // TODO: Заменить на реальный запрос к CommandController
-    // Пока возвращаем пустой список
-    return new ArrayList<>();
+  // PUT /api/events/{id}/status — обновить статус события
+  @PutMapping("/{id}/status")
+  public EventDto updateEventStatus(@PathVariable UUID id, @RequestParam String status) {
+    Event updated = eventService.updateEventStatus(id, status);
+    return updated != null ? convertToDto(updated) : null;
+  }
+
+  // DELETE /api/events/{id} — удалить событие
+  @DeleteMapping("/{id}")
+  public String deleteEvent(@PathVariable UUID id) {
+    eventService.deleteEvent(id);
+    return "Событие удалено";
   }
 }
