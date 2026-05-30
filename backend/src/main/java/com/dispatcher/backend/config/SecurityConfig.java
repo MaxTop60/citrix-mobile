@@ -43,7 +43,7 @@ public class SecurityConfig {
 
   @Bean
   public AuthenticationProvider authenticationProvider() {
-    // Создаём провайдер через анонимный класс или直接用 UserDetailsService
+    // Создаём провайдер через анонимный класс
     return new AuthenticationProvider() {
       @Override
       public org.springframework.security.core.Authentication authenticate(
