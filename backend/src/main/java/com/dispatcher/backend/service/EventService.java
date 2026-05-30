@@ -1,7 +1,10 @@
 package com.dispatcher.backend.service;
 
 import com.dispatcher.backend.entity.Event;
+import com.dispatcher.backend.entity.Vehicle;
 import com.dispatcher.backend.repository.EventRepository;
+import com.dispatcher.backend.repository.VehicleRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -12,6 +15,9 @@ public class EventService {
 
   @Autowired
   private EventRepository eventRepository;
+
+  @Autowired
+  private VehicleRepository vehicleRepository;
 
   // Получить все события
   public List<Event> getAllEvents() {
@@ -34,8 +40,12 @@ public class EventService {
   }
 
   // Создать новое событие
-  public Event createEvent(Event event) {
-    event.setEventId(null); // чтобы Hibernate создал новый ID
+  public Event createEvent(Event event, UUID vehicleId) {
+    if (vehicleId != null) {
+      Vehicle vehicle = vehicleRepository.findById(vehicleId).orElse(null);
+      event.setVehicle(vehicle);
+    }
+    event.setEventId(null);
     event.setTimestamp(java.time.LocalDateTime.now());
     return eventRepository.save(event);
   }

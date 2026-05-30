@@ -19,7 +19,7 @@ public class EventController {
 
   // Конвертация Entity → DTO
   private EventDto convertToDto(Event event) {
-    return new EventDto(
+    EventDto dto = new EventDto(
         event.getEventId(),
         event.getEventType(),
         event.getPriority(),
@@ -28,6 +28,13 @@ public class EventController {
         event.getLatitude(),
         event.getLongitude(),
         event.getDescription());
+
+    // Добавляем vehicleId
+    if (event.getVehicle() != null) {
+      dto.setVehicleId(event.getVehicle().getVehicleId());
+    }
+
+    return dto;
   }
 
   // GET /api/events — получить все события
@@ -56,6 +63,11 @@ public class EventController {
   // POST /api/events — создать новое событие
   @PostMapping
   public EventDto createEvent(@RequestBody EventDto eventDto) {
+    System.out.println("=== FULL REQUEST DEBUG ===");
+    System.out.println("eventDto object: " + eventDto);
+    System.out.println("eventDto.getVehicleId(): " + eventDto.getVehicleId());
+    System.out.println("eventDto.getEventType(): " + eventDto.getEventType());
+
     Event event = new Event(
         null, // vehicleId пока null
         eventDto.getEventType(),
@@ -63,7 +75,7 @@ public class EventController {
         eventDto.getLatitude(),
         eventDto.getLongitude(),
         eventDto.getDescription());
-    Event saved = eventService.createEvent(event);
+    Event saved = eventService.createEvent(event, eventDto.getVehicleId());
     return convertToDto(saved);
   }
 

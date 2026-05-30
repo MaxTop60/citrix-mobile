@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public class EventDto {
     private UUID eventId;
+    private UUID vehicleId;
     private String eventType;
     private String priority;
     private String status;
@@ -14,11 +15,12 @@ public class EventDto {
     private String description;
 
     // Конструкторы
-    public EventDto() {}
+    public EventDto() {
+    }
 
-    public EventDto(UUID eventId, String eventType, String priority, String status, 
-                    LocalDateTime timestamp, Double latitude, Double longitude, 
-                    String description) {
+    public EventDto(UUID eventId, String eventType, String priority, String status,
+            LocalDateTime timestamp, Double latitude, Double longitude,
+            String description) {
         this.eventId = eventId;
         this.eventType = eventType;
         this.priority = priority;
@@ -30,27 +32,75 @@ public class EventDto {
     }
 
     // Геттеры и сеттеры
-    public UUID getEventId() { return eventId; }
-    public void setEventId(UUID eventId) { this.eventId = eventId; }
+    public UUID getEventId() {
+        return eventId;
+    }
 
-    public String getEventType() { return eventType; }
-    public void setEventType(String eventType) { this.eventType = eventType; }
+    public void setEventId(UUID eventId) {
+        this.eventId = eventId;
+    }
 
-    public String getPriority() { return priority; }
-    public void setPriority(String priority) { this.priority = priority; }
+    public String getEventType() {
+        return eventType;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
 
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    public String getPriority() {
+        return priority;
+    }
 
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
 
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public String getStatus() {
+        return status;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public UUID getVehicleId() {
+        return vehicleId;
+    }
+
+    public void setVehicleId(UUID vehicleId) {
+        this.vehicleId = vehicleId;
+    }
 }
