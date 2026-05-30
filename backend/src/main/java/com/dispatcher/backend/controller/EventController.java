@@ -1,7 +1,10 @@
 package com.dispatcher.backend.controller;
 
+import com.dispatcher.backend.dto.CommandDto;
 import com.dispatcher.backend.dto.EventDto;
+import com.dispatcher.backend.entity.Command;
 import com.dispatcher.backend.entity.Event;
+import com.dispatcher.backend.service.CommandService;
 import com.dispatcher.backend.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +19,9 @@ public class EventController {
 
   @Autowired
   private EventService eventService;
+
+  @Autowired
+  private CommandService commandService;
 
   // Конвертация Entity → DTO
   private EventDto convertToDto(Event event) {
@@ -91,5 +97,27 @@ public class EventController {
   public String deleteEvent(@PathVariable UUID id) {
     eventService.deleteEvent(id);
     return "Событие удалено";
+  }
+
+  // GET /api/events/{id}/commands — получить команды для события
+  @GetMapping("/{id}/commands")
+  public List<CommandDto> getCommandsByEvent(@PathVariable UUID id) {
+    return commandService.getCommandsByEvent(id).stream()
+        .map(this::convertCommandToDto)
+        .collect(Collectors.toList());
+  }
+
+  // Конвертация Command → CommandDto
+  private CommandDto convertCommandToDto(Command command) {
+    CommandDto dto = new CommandDto();
+    dto.setCommandId(command.getCommandId());
+    dto.setEventId(command.getEvent().getEventId());
+    dto.setMessage(command.getMessage());
+    dto.setChannel(command.getChannel());
+    dto.setStatus(command.getStatus());
+    dto.setSentAt(command.getSentAt());
+    dto.setDeliveredAt(command.getDeliveredAt());
+    dto.setErrorMessage(command.getErrorMessage());
+    return dto;
   }
 }
