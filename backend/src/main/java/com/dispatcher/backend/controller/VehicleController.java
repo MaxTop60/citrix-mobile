@@ -1,6 +1,8 @@
 package com.dispatcher.backend.controller;
 
+import com.dispatcher.backend.entity.Client;
 import com.dispatcher.backend.entity.Vehicle;
+import com.dispatcher.backend.repository.ClientRepository;
 import com.dispatcher.backend.repository.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,9 @@ public class VehicleController {
   @Autowired
   private VehicleRepository vehicleRepository;
 
+  @Autowired
+  private ClientRepository clientRepository;
+
   // GET /api/vehicles — получить все транспортные средства
   @GetMapping
   public List<Vehicle> getAllVehicles() {
@@ -27,10 +32,14 @@ public class VehicleController {
     return vehicleRepository.findById(id).orElse(null);
   }
 
-  // POST /api/vehicles — создать новое ТС
+  // POST /api/vehicles — создать ТС с привязкой к клиенту
   @PostMapping
-  public Vehicle createVehicle(@RequestBody Vehicle vehicle) {
-    vehicle.setVehicleId(null); // чтобы Hibernate создал новый ID
+  public Vehicle createVehicle(@RequestBody Vehicle vehicle, @RequestParam(required = false) UUID clientId) {
+    if (clientId != null) {
+      Client client = clientRepository.findById(clientId).orElse(null);
+      vehicle.setClient(client);
+    }
+    vehicle.setVehicleId(null);
     return vehicleRepository.save(vehicle);
   }
 
