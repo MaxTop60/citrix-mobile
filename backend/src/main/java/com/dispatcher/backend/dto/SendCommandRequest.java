@@ -5,7 +5,6 @@ import java.util.UUID;
 public class SendCommandRequest {
     private UUID eventId;
     private String message;
-    private String channel; // SMS, TELEGRAM
 
     public SendCommandRequest() {
     }
@@ -24,13 +23,5 @@ public class SendCommandRequest {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public String getChannel() {
-        return channel;
-    }
-
-    public void setChannel(String channel) {
-        this.channel = channel;
     }
 }

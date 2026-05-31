@@ -57,19 +57,22 @@ public class CommandController {
                 .collect(Collectors.toList());
     }
 
-    // POST /api/commands — отправить команду
+    // POST /api/commands — отправить команду водителю (только SMS)
     @PostMapping
-    public CommandDto sendCommand(@RequestBody SendCommandRequest request) {
+    public CommandDto sendCommand(@RequestBody SendCommandRequest request,
+            @RequestParam UUID driverId) {
         Command saved = commandService.sendCommand(
                 request.getEventId(),
                 request.getMessage(),
-                request.getChannel());
+                "SMS",
+                driverId);
         return convertToDto(saved);
     }
 
     // PUT /api/commands/{id}/status — обновить статус команды
     @PutMapping("/{id}/status")
-    public CommandDto updateCommandStatus(@PathVariable UUID id, @RequestParam String status,
+    public CommandDto updateCommandStatus(@PathVariable UUID id,
+            @RequestParam String status,
             @RequestParam(required = false) String errorMessage) {
         Command updated = commandService.updateCommandStatus(id, status, errorMessage);
         return updated != null ? convertToDto(updated) : null;
