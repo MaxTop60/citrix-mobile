@@ -1,24 +1,38 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { Provider } from 'react-redux';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { store } from './store';
+import LoginScreen from '../features/auth/ui/LoginScreen';
+import RegisterScreen from '../features/auth/ui/RegisterScreen';
+import EventsScreen from '../features/events/ui/EventsScreen';
 
-function App() {
+const Stack = createStackNavigator();
+
+function App(): React.JSX.Element {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Привет, Диспетчер!</Text>
-    </View>
+    <Provider store={store}>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Login">
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen 
+            name="Register" 
+            component={RegisterScreen} 
+            options={{ title: 'Регистрация' }}
+          />
+          <Stack.Screen 
+            name="Events" 
+            component={EventsScreen} 
+            options={{ title: 'События' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 24,
-    color: '#ffffff',
-  },
-});
 
 export default App;
