@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk} from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiClient } from '../../../shared/api/client';
 
 export interface Event {
@@ -66,6 +66,23 @@ export const updateEventStatus = createAsyncThunk(
   }
 );
 
+// Отправить команду водителю
+export const sendCommand = createAsyncThunk(
+  'events/sendCommand',
+  async ({ eventId, message, channel, driverId }: { eventId: string; message: string; channel: string; driverId: string }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post(`/commands?driverId=${driverId}`, {
+        eventId,
+        message,
+        channel,
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send command');
+    }
+  }
+);
+
 const eventsSlice = createSlice({
   name: 'events',
   initialState,
@@ -106,13 +123,7 @@ const eventsSlice = createSlice({
         state.error = action.payload as string;
       })
       // updateEventStatus
-      .addCase(updateEventStatus.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
       .addCase(updateEventStatus.fulfilled, (state, action) => {
-        state.isLoading = false;
-        // Обновляем статус в списке событий
         const index = state.events.findIndex(e => e.eventId === action.payload.eventId);
         if (index !== -1) {
           state.events[index] = action.payload;
@@ -120,10 +131,6 @@ const eventsSlice = createSlice({
         if (state.currentEvent?.eventId === action.payload.eventId) {
           state.currentEvent = action.payload;
         }
-      })
-      .addCase(updateEventStatus.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
       });
   },
 });

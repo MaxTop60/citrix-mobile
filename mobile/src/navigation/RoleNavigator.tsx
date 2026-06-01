@@ -5,13 +5,12 @@ import { RootState } from '../app/store';
 
 // Client экраны
 import ClientDashboardScreen from '../features/client/ui/ClientDashboardScreen';
-import ClientReportsScreen from '../features/client/ui/ClientReportsScreen';
 import ClientVehiclesScreen from '../features/client/ui/ClientVehiclesScreen';
+import ClientReportsScreen from '../features/client/ui/ClientReportsScreen';
 
 // Dispatcher экраны
 import DispatcherEventsScreen from '../features/dispatcher/ui/DispatcherEventsScreen';
 import DispatcherEventDetailScreen from '../features/dispatcher/ui/DispatcherEventDetailScreen';
-import DispatcherCommandsScreen from '../features/dispatcher/ui/DispatcherCommandsScreen';
 
 // Driver экраны
 import DriverCommandsScreen from '../features/driver/ui/DriverCommandsScreen';
@@ -31,7 +30,6 @@ const DispatcherStack = () => (
   <Stack.Navigator>
     <Stack.Screen name="Events" component={DispatcherEventsScreen} options={{ title: 'События' }} />
     <Stack.Screen name="EventDetail" component={DispatcherEventDetailScreen} options={{ title: 'Детали события' }} />
-    <Stack.Screen name="Commands" component={DispatcherCommandsScreen} options={{ title: 'Команды' }} />
   </Stack.Navigator>
 );
 

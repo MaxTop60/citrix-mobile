@@ -11,7 +11,6 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
-// Перехватчик запросов — добавляем токен
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
@@ -23,13 +22,12 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Перехватчик ответов — обрабатываем ошибки
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
       await AsyncStorage.removeItem('token');
-      // TODO: перенаправить на экран логина
+      // Редирект на логин будет в AppNavigator
     }
     return Promise.reject(error);
   }
