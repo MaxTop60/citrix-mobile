@@ -5,31 +5,34 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { store } from './store';
 import LoginScreen from '../features/auth/ui/LoginScreen';
 import RegisterScreen from '../features/auth/ui/RegisterScreen';
-import EventsScreen from '../features/events/ui/EventsScreen';
+import { RoleNavigator } from '../navigation/RoleNavigator';
+import { useSelector } from 'react-redux';
+import { RootState } from './store';
 
 const Stack = createStackNavigator();
+
+const AppNavigator = () => {
+  const isAuthenticated = useSelector((state: RootState) => !!state.auth.token);
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+        </>
+      ) : (
+        <Stack.Screen name="Main" component={RoleNavigator} />
+      )}
+    </Stack.Navigator>
+  );
+};
 
 function App(): React.JSX.Element {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login">
-          <Stack.Screen 
-            name="Login" 
-            component={LoginScreen} 
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen 
-            name="Register" 
-            component={RegisterScreen} 
-            options={{ title: 'Регистрация' }}
-          />
-          <Stack.Screen 
-            name="Events" 
-            component={EventsScreen} 
-            options={{ title: 'События' }}
-          />
-        </Stack.Navigator>
+        <AppNavigator />
       </NavigationContainer>
     </Provider>
   );
