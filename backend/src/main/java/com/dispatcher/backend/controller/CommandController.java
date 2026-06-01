@@ -3,13 +3,18 @@ package com.dispatcher.backend.controller;
 import com.dispatcher.backend.dto.CommandDto;
 import com.dispatcher.backend.dto.SendCommandRequest;
 import com.dispatcher.backend.entity.Command;
+import com.dispatcher.backend.entity.DriverResponse;
+import com.dispatcher.backend.repository.DriverResponseRepository;
 import com.dispatcher.backend.service.CommandService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/commands")
@@ -17,6 +22,9 @@ public class CommandController {
 
     @Autowired
     private CommandService commandService;
+
+    @Autowired
+    private DriverResponseRepository driverResponseRepository;
 
     // Конвертация Entity → DTO
     private CommandDto convertToDto(Command command) {
@@ -67,6 +75,27 @@ public class CommandController {
                 "SMS",
                 driverId);
         return convertToDto(saved);
+    }
+
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<?> confirmCommand(@PathVariable UUID id, @RequestBody Map<String, String> request) {
+        String responseType = request.get("responseType");
+        String content = request.get("content");
+
+        Command command = commandService.getCommandById(id);
+        if (command == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Создаём ответ водителя
+        DriverResponse driverResponse = new DriverResponse(command, responseType, content);
+        driverResponseRepository.save(driverResponse);
+
+        // Обновляем статус команды
+        command.setStatus("RESPONDED");
+        commandService.updateCommand(command);
+
+        return ResponseEntity.ok(command);
     }
 
     // PUT /api/commands/{id}/status — обновить статус команды

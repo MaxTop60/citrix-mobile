@@ -1,20 +1,159 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../app/store';
+import { fetchDriverCommands, DriverCommand } from '../../events/model/eventsSlice';
 
-const DriverCommandsScreen = () => {
+const getStatusText = (status: string): string => {
+  switch (status) {
+    case 'SENT':
+      return 'Отправлено';
+    case 'DELIVERED':
+      return 'Доставлено';
+    case 'READ':
+      return 'Прочитано';
+    case 'RESPONDED':
+      return 'Подтверждено';
+    case 'ERROR':
+      return 'Ошибка';
+    default:
+      return status;
+  }
+};
+
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'SENT':
+      return '#FF9500';
+    case 'DELIVERED':
+      return '#007AFF';
+    case 'READ':
+      return '#34C759';
+    case 'RESPONDED':
+      return '#28A745';
+    case 'ERROR':
+      return '#DC3545';
+    default:
+      return '#666';
+  }
+};
+
+const DriverCommandsScreen = ({ navigation }: any) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { commands, isLoading } = useSelector((state: RootState) => state.events);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadCommands();
+  }, []);
+
+  const loadCommands = async () => {
+    await dispatch(fetchDriverCommands());
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadCommands();
+    setRefreshing(false);
+  };
+
+  const renderCommand = ({ item }: { item: DriverCommand }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('CommandDetail', { commandId: item.commandId })}
+    >
+      <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+        <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
+      </View>
+      <Text style={styles.message} numberOfLines={2}>
+        {item.message}
+      </Text>
+      <Text style={styles.time}>
+        {new Date(item.sentAt).toLocaleString()}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  if (isLoading && !refreshing) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Панель водителя</Text>
-      <Text style={styles.subtitle}>Команды</Text>
-    </View>
+    <FlatList
+      data={commands}
+      keyExtractor={(item) => item.commandId}
+      renderItem={renderCommand}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+      ListEmptyComponent={
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>Нет команд</Text>
+        </View>
+      }
+      contentContainerStyle={styles.list}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, gap: 12 },
-  title: { fontSize: 24, fontWeight: 'bold' },
-  subtitle: { fontSize: 16, color: '#666', marginBottom: 20 },
+  list: {
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  message: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8,
+  },
+  time: {
+    fontSize: 12,
+    color: '#999',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    color: '#999',
+    fontSize: 16,
+  },
 });
 
 export default DriverCommandsScreen;

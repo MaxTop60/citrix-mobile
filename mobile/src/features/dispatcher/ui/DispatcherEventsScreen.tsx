@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../app/store';
-import { fetchEvents, Event } from '../../events/model/eventsSlice';
+import { fetchEvents, setFilter, resetFilters, applyFilters, Event } from '../../events/model/eventsSlice';
+import FilterModal from './FilterModal';
 
 const getPriorityColor = (priority: string): string => {
   switch (priority) {
@@ -59,8 +60,9 @@ const getEventTypeText = (eventType: string): string => {
 
 const DispatcherEventsScreen = ({ navigation }: any) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { events, isLoading, error } = useSelector((state: RootState) => state.events);
+  const { filteredEvents, isLoading, error, filters } = useSelector((state: RootState) => state.events);
   const [refreshing, setRefreshing] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
 
   useEffect(() => {
     loadEvents();
@@ -75,6 +77,19 @@ const DispatcherEventsScreen = ({ navigation }: any) => {
     await loadEvents();
     setRefreshing(false);
   };
+
+  const handleApplyFilters = (newFilters: { eventType: string | null; priority: string | null; status: string | null }) => {
+    if (newFilters.eventType !== undefined) dispatch(setFilter({ type: 'eventType', value: newFilters.eventType }));
+    if (newFilters.priority !== undefined) dispatch(setFilter({ type: 'priority', value: newFilters.priority }));
+    if (newFilters.status !== undefined) dispatch(setFilter({ type: 'status', value: newFilters.status }));
+    dispatch(applyFilters());
+  };
+
+  const handleResetFilters = () => {
+    dispatch(resetFilters());
+  };
+
+  const hasActiveFilters = filters.eventType || filters.priority || filters.status;
 
   const renderEvent = ({ item }: { item: Event }) => (
     <TouchableOpacity
@@ -114,26 +129,88 @@ const DispatcherEventsScreen = ({ navigation }: any) => {
   }
 
   return (
-    <FlatList
-      data={events}
-      keyExtractor={(item) => item.eventId}
-      renderItem={renderEvent}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>Нет событий</Text>
-        </View>
-      }
-      contentContainerStyle={styles.list}
-    />
+    <>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
+          onPress={() => setFilterModalVisible(true)}
+        >
+          <Text style={[styles.filterButtonText, hasActiveFilters && styles.filterButtonTextActive]}>
+            🔽 Фильтр {hasActiveFilters && '✓'}
+          </Text>
+        </TouchableOpacity>
+        {hasActiveFilters && (
+          <TouchableOpacity style={styles.resetButton} onPress={handleResetFilters}>
+            <Text style={styles.resetButtonText}>Сбросить</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <FlatList
+        data={filteredEvents}
+        keyExtractor={(item) => item.eventId}
+        renderItem={renderEvent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <Text style={styles.emptyText}>Нет событий</Text>
+          </View>
+        }
+        contentContainerStyle={styles.list}
+      />
+
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApply={handleApplyFilters}
+        currentFilters={filters}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   list: {
     padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+    gap: 12,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: '#007AFF',
+  },
+  filterButtonText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+  },
+  resetButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+  },
+  resetButtonText: {
+    fontSize: 14,
+    color: '#DC3545',
+    fontWeight: '500',
   },
   card: {
     backgroundColor: '#fff',

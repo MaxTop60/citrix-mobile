@@ -101,6 +101,11 @@ public class CommandService {
     return null;
   }
 
+  // Обновить команду
+  public Command updateCommand(Command command) {
+    return commandRepository.save(command);
+  }
+
   // Удалить команду
   public void deleteCommand(UUID commandId) {
     commandRepository.deleteById(commandId);
