@@ -35,13 +35,31 @@ export const login = createAsyncThunk(
 // Асинхронный thunk для регистрации
 export const register = createAsyncThunk(
   'auth/register',
-  async ({ email, password, role }: { email: string; password: string; role: string }, { rejectWithValue }) => {
+  async ({ 
+    email, 
+    password, 
+    role, 
+    fullName, 
+    phone 
+  }: { 
+    email: string; 
+    password: string; 
+    role: string; 
+    fullName: string; 
+    phone: string; 
+  }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post('/auth/register', { email, password, role });
-      const { token, email: userEmail, role: userRole } = response.data;
+      const response = await apiClient.post('/auth/register', { 
+        email, 
+        password, 
+        role, 
+        fullName, 
+        phone 
+      });
+      const { token, email: userEmail, role: userRole, profileId } = response.data;
       await storage.setToken(token);
-      await storage.setUser({ email: userEmail, role: userRole });
-      return { token, user: { email: userEmail, role: userRole } };
+      await storage.setUser({ email: userEmail, role: userRole, profileId });
+      return { token, user: { email: userEmail, role: userRole, profileId } };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed');
     }

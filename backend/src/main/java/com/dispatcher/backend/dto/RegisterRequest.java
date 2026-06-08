@@ -4,10 +4,22 @@ public class RegisterRequest {
   private String email;
   private String password;
   private String role;
+  private String phone;
+  private String fullName;
 
+  // Конструкторы
   public RegisterRequest() {
   }
 
+  public RegisterRequest(String email, String password, String role, String phone, String fullName) {
+    this.email = email;
+    this.password = password;
+    this.role = role;
+    this.phone = phone;
+    this.fullName = fullName;
+  }
+
+  // Геттеры и сеттеры
   public String getEmail() {
     return email;
   }
@@ -30,5 +42,21 @@ public class RegisterRequest {
 
   public void setRole(String role) {
     this.role = role;
+  }
+
+  public String getPhone() {
+    return phone;
+  }
+
+  public void setPhone(String phone) {
+    this.phone = phone;
+  }
+
+  public String getFullName() {
+    return fullName;
+  }
+
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
   }
 }

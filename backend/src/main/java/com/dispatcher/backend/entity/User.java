@@ -26,10 +26,16 @@ public class User implements UserDetails {
   private String password;
 
   @Column(name = "role", nullable = false, length = 50)
-  private String role = "ROLE_USER";
+  private String role;
+
+  @Column(name = "client_id")
+  private UUID clientId;
 
   @Column(name = "dispatcher_id")
   private UUID dispatcherId;
+
+  @Column(name = "driver_id")
+  private UUID driverId;
 
   @Column(name = "is_active")
   private Boolean isActive = true;
@@ -111,12 +117,28 @@ public class User implements UserDetails {
     this.role = role;
   }
 
+  public UUID getClientId() {
+    return clientId;
+  }
+
+  public void setClientId(UUID clientId) {
+    this.clientId = clientId;
+  }
+
   public UUID getDispatcherId() {
     return dispatcherId;
   }
 
   public void setDispatcherId(UUID dispatcherId) {
     this.dispatcherId = dispatcherId;
+  }
+
+  public UUID getDriverId() {
+    return driverId;
+  }
+
+  public void setDriverId(UUID driverId) {
+    this.driverId = driverId;
   }
 
   public Boolean getIsActive() {

@@ -21,6 +21,8 @@ const RegisterScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [selectedRole, setSelectedRole] = useState<Role>('ROLE_DISPATCHER');
   const dispatch = useDispatch<AppDispatch>();
   const { isLoading, error } = useSelector((state: RootState) => state.auth);
@@ -33,7 +35,7 @@ const RegisterScreen = ({ navigation }: any) => {
   }, [error, dispatch]);
 
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !fullName || !phone) {
       Alert.alert('Ошибка', 'Заполните все поля');
       return;
     }
@@ -48,7 +50,14 @@ const RegisterScreen = ({ navigation }: any) => {
       return;
     }
 
-    const result = await dispatch(register({ email, password, role: selectedRole }));
+    const result = await dispatch(register({ 
+      email, 
+      password, 
+      role: selectedRole,
+      fullName,
+      phone,
+    }));
+    
     if (register.fulfilled.match(result)) {
       navigation.replace('Main');
     }
@@ -123,6 +132,21 @@ const RegisterScreen = ({ navigation }: any) => {
           <Text style={styles.selectedRoleText}>
             Выбрано: {getRoleDescription(selectedRole)}
           </Text>
+
+          <Input
+            label="ФИО"
+            value={fullName}
+            onChangeText={setFullName}
+            placeholder="Иванов Иван Иванович"
+          />
+
+          <Input
+            label="Телефон"
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="+7 (999) 123-45-67"
+            keyboardType="phone-pad"
+          />
 
           <Input
             label="Email"
