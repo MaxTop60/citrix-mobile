@@ -29,9 +29,9 @@ public class CommandService {
   @Autowired
   private SmsRuGateway smsRuGateway;
 
-  // Получить все команды
-  public List<Command> getAllCommands() {
-    return commandRepository.findAll();
+  // Получить команды по driverId
+  public List<Command> getCommandsByDriverId(UUID driverId) {
+    return commandRepository.findByDriver_DriverId(driverId);
   }
 
   // Получить команду по ID

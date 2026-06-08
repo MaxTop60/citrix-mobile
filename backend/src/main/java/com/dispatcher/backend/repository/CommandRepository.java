@@ -10,5 +10,7 @@ import java.util.UUID;
 public interface CommandRepository extends JpaRepository<Command, UUID> {
   List<Command> findByEvent_EventId(UUID eventId);
 
+  List<Command> findByDriver_DriverId(UUID driverId);
+
   List<Command> findByStatus(String status);
 }

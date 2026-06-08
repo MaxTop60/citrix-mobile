@@ -4,10 +4,13 @@ import com.dispatcher.backend.dto.CommandDto;
 import com.dispatcher.backend.dto.SendCommandRequest;
 import com.dispatcher.backend.entity.Command;
 import com.dispatcher.backend.entity.DriverResponse;
+import com.dispatcher.backend.entity.User;
 import com.dispatcher.backend.repository.DriverResponseRepository;
+import com.dispatcher.backend.repository.UserRepository;
 import com.dispatcher.backend.service.CommandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -26,6 +29,16 @@ public class CommandController {
     @Autowired
     private DriverResponseRepository driverResponseRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    // Получить текущего пользователя из JWT токена
+    private User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
     // Конвертация Entity → DTO
     private CommandDto convertToDto(Command command) {
         CommandDto dto = new CommandDto();
@@ -42,10 +55,18 @@ public class CommandController {
         return dto;
     }
 
-    // GET /api/commands — получить все команды
+    // GET /api/commands — получить команды только для текущего водителя
     @GetMapping
     public List<CommandDto> getAllCommands() {
-        return commandService.getAllCommands().stream()
+        User currentUser = getCurrentUser();
+        UUID driverId = currentUser.getDriverId();
+
+        if (driverId == null) {
+            return List.of(); // Водитель не привязан
+        }
+
+        List<Command> commands = commandService.getCommandsByDriverId(driverId);
+        return commands.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }

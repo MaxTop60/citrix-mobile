@@ -118,7 +118,7 @@ export const fetchDriverCommands = createAsyncThunk(
   'events/fetchDriverCommands',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiClient.get('/commands');
+      const response = await apiClient.get('/commands/my');  // ← меняем на /my
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch commands');

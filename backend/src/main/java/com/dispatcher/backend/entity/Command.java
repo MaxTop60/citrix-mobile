@@ -17,6 +17,10 @@ public class Command {
   @JoinColumn(name = "event_id", nullable = false)
   private Event event;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "driver_id", nullable = false)
+  private Driver driver;
+
   @Column(name = "message", nullable = false, length = 500)
   private String message;
 
