@@ -40,13 +40,15 @@ export const register = createAsyncThunk(
     password, 
     role, 
     fullName, 
-    phone 
+    phone,
+    clientId  
   }: { 
     email: string; 
     password: string; 
     role: string; 
     fullName: string; 
-    phone: string; 
+    phone: string;
+    clientId?: string; 
   }, { rejectWithValue }) => {
     try {
       const response = await apiClient.post('/auth/register', { 
@@ -54,7 +56,8 @@ export const register = createAsyncThunk(
         password, 
         role, 
         fullName, 
-        phone 
+        phone,
+        clientId 
       });
       const { token, email: userEmail, role: userRole, profileId } = response.data;
       await storage.setToken(token);

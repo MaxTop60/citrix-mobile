@@ -6,17 +6,19 @@ public class RegisterRequest {
   private String role;
   private String phone;
   private String fullName;
+  private String clientId;
 
   // Конструкторы
   public RegisterRequest() {
   }
 
-  public RegisterRequest(String email, String password, String role, String phone, String fullName) {
+  public RegisterRequest(String email, String password, String role, String phone, String fullName, String clientId) {
     this.email = email;
     this.password = password;
     this.role = role;
     this.phone = phone;
     this.fullName = fullName;
+    this.clientId = clientId;
   }
 
   // Геттеры и сеттеры
@@ -58,5 +60,13 @@ public class RegisterRequest {
 
   public void setFullName(String fullName) {
     this.fullName = fullName;
+  }
+
+  public String getClientId() {
+    return clientId;
+  }
+
+  public void setClientId(String clientId) {
+    this.clientId = clientId;
   }
 }

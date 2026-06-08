@@ -15,10 +15,11 @@ import com.dispatcher.backend.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import java.util.UUID;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -69,17 +70,22 @@ public class AuthController {
     user.setRole(role);
 
     UUID profileId = null;
+    Client client = null;
 
-    // В зависимости от роли создаём запись в профильной таблице
+    // Если передан clientId, находим клиента
+    if (request.getClientId() != null && !request.getClientId().isEmpty()) {
+      client = clientRepository.findById(UUID.fromString(request.getClientId())).orElse(null);
+    }
+
     switch (role) {
       case "ROLE_CLIENT":
-        Client client = new Client();
-        client.setName(request.getFullName() != null ? request.getFullName() : "Новый клиент");
-        client.setInn("0000000000");
-        client.setPhone(request.getPhone() != null ? request.getPhone() : "");
-        client.setEmail(request.getEmail());
-        client = clientRepository.save(client);
-        profileId = client.getClientId();
+        Client newClient = new Client();
+        newClient.setName(request.getFullName() != null ? request.getFullName() : "Новый клиент");
+        newClient.setInn("0000000000");
+        newClient.setPhone(request.getPhone() != null ? request.getPhone() : "");
+        newClient.setEmail(request.getEmail());
+        newClient = clientRepository.save(newClient);
+        profileId = newClient.getClientId();
         user.setClientId(profileId);
         break;
 
@@ -88,6 +94,9 @@ public class AuthController {
         dispatcher.setFullName(request.getFullName() != null ? request.getFullName() : "Новый диспетчер");
         dispatcher.setEmail(request.getEmail());
         dispatcher.setPhone(request.getPhone() != null ? request.getPhone() : "");
+        if (client != null) {
+          dispatcher.setClient(client); // Привязываем к клиенту
+        }
         dispatcher = dispatcherRepository.save(dispatcher);
         profileId = dispatcher.getDispatcherId();
         user.setDispatcherId(profileId);
@@ -97,6 +106,9 @@ public class AuthController {
         Driver driver = new Driver();
         driver.setFullName(request.getFullName() != null ? request.getFullName() : "Новый водитель");
         driver.setPhone(request.getPhone() != null ? request.getPhone() : "");
+        if (client != null) {
+          driver.setClient(client); // Привязываем к клиенту
+        }
         driver = driverRepository.save(driver);
         profileId = driver.getDriverId();
         user.setDriverId(profileId);
@@ -117,5 +129,11 @@ public class AuthController {
     response.put("profileId", profileId);
 
     return response;
+  }
+
+  // Получить список клиентов (для выбора при регистрации диспетчера/водителя)
+  @GetMapping("/clients")
+  public List<Client> getAllClients() {
+    return clientRepository.findAll();
   }
 }

@@ -33,3 +33,8 @@ apiClient.interceptors.response.use(
   }
 );
 
+export const fetchClients = async () => {
+  const response = await apiClient.get('/auth/clients');
+  return response.data;
+};
+
