@@ -29,6 +29,11 @@ public class EventService {
     return eventRepository.findById(eventId).orElse(null);
   }
 
+  // Получить события по clientId (через vehicle.client)
+  public List<Event> getEventsByClientId(UUID clientId) {
+    return eventRepository.findByVehicle_Client_ClientId(clientId);
+  }
+
   // Получить события по транспортному средству
   public List<Event> getEventsByVehicle(UUID vehicleId) {
     return eventRepository.findByVehicle_VehicleId(vehicleId);

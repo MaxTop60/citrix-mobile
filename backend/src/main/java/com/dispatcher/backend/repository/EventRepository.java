@@ -13,4 +13,6 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
   List<Event> findByStatus(String status);
 
   List<Event> findByPriority(String priority);
+
+  List<Event> findByVehicle_Client_ClientId(UUID clientId);
 }

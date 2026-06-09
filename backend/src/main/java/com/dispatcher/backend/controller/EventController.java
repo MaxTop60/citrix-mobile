@@ -4,9 +4,12 @@ import com.dispatcher.backend.dto.CommandDto;
 import com.dispatcher.backend.dto.EventDto;
 import com.dispatcher.backend.entity.Command;
 import com.dispatcher.backend.entity.Event;
+import com.dispatcher.backend.entity.User;
+import com.dispatcher.backend.repository.UserRepository;
 import com.dispatcher.backend.service.CommandService;
 import com.dispatcher.backend.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +25,15 @@ public class EventController {
 
   @Autowired
   private CommandService commandService;
+
+  @Autowired
+  private UserRepository userRepository;
+
+  private User getCurrentUser() {
+    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+  }
 
   // Конвертация Entity → DTO
   private EventDto convertToDto(Event event) {
@@ -46,7 +58,15 @@ public class EventController {
   // GET /api/events — получить все события
   @GetMapping
   public List<EventDto> getAllEvents() {
-    return eventService.getAllEvents().stream()
+    User currentUser = getCurrentUser();
+    UUID clientId = currentUser.getClientId();
+
+    if (clientId == null) {
+      return List.of(); // Диспетчер не привязан к клиенту
+    }
+
+    List<Event> events = eventService.getEventsByClientId(clientId);
+    return events.stream()
         .map(this::convertToDto)
         .collect(Collectors.toList());
   }
@@ -54,8 +74,23 @@ public class EventController {
   // GET /api/events/{id} — получить событие по ID
   @GetMapping("/{id}")
   public EventDto getEventById(@PathVariable UUID id) {
+    User currentUser = getCurrentUser();
+    UUID clientId = currentUser.getClientId();
+
+    if (clientId == null) {
+      return null;
+    }
+
     Event event = eventService.getEventById(id);
-    return event != null ? convertToDto(event) : null;
+
+    // Проверяем, что ТС события принадлежит клиенту диспетчера
+    if (event != null && event.getVehicle() != null &&
+        event.getVehicle().getClient() != null &&
+        event.getVehicle().getClient().getClientId().equals(clientId)) {
+      return convertToDto(event);
+    }
+
+    return null;
   }
 
   // GET /api/events/status/{status} — получить события по статусу
