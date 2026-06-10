@@ -99,13 +99,9 @@ export const updateEventStatus = createAsyncThunk(
 // Отправить команду водителю
 export const sendCommand = createAsyncThunk(
   'events/sendCommand',
-  async ({ eventId, message, channel, driverId }: { eventId: string; message: string; channel: string; driverId: string }, { rejectWithValue }) => {
+  async ({ eventId, message }: { eventId: string; message: string }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post(`/commands?driverId=${driverId}`, {
-        eventId,
-        message,
-        channel,
-      });
+      const response = await apiClient.post('/commands', { eventId, message });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to send command');

@@ -114,7 +114,6 @@ public class Command {
     this.errorMessage = errorMessage;
   }
 
-  // Бизнес-методы
   public void markAsDelivered() {
     this.status = "DELIVERED";
     this.deliveredAt = LocalDateTime.now();
@@ -123,5 +122,13 @@ public class Command {
   public void markAsError(String error) {
     this.status = "ERROR";
     this.errorMessage = error;
+  }
+
+  public Driver getDriver() {
+    return driver;
+  }
+
+  public void setDriver(Driver driver) {
+    this.driver = driver;
   }
 }

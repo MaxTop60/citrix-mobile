@@ -7,11 +7,14 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../app/store';
 import { fetchEvents, setFilter, resetFilters, applyFilters, Event } from '../../events/model/eventsSlice';
+import { useNavigation } from '@react-navigation/native';
 import FilterModal from './FilterModal';
+import { logout } from '../../auth/model/authSlice';
 
 const getPriorityColor = (priority: string): string => {
   switch (priority) {
@@ -89,6 +92,27 @@ const DispatcherEventsScreen = ({ navigation }: any) => {
     dispatch(resetFilters());
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Выход',
+      'Вы уверены, что хотите выйти?',
+      [
+        { text: 'Отмена', style: 'cancel' },
+        { 
+          text: 'Выйти', 
+          style: 'destructive',
+          onPress: async () => {
+            await dispatch(logout());
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          }
+        },
+      ]
+    );
+  };
+
   const hasActiveFilters = filters.eventType || filters.priority || filters.status;
 
   const renderEvent = ({ item }: { item: Event }) => (
@@ -131,19 +155,24 @@ const DispatcherEventsScreen = ({ navigation }: any) => {
   return (
     <>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
-          onPress={() => setFilterModalVisible(true)}
-        >
-          <Text style={[styles.filterButtonText, hasActiveFilters && styles.filterButtonTextActive]}>
-            🔽 Фильтр {hasActiveFilters && '✓'}
-          </Text>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Выйти</Text>
         </TouchableOpacity>
-        {hasActiveFilters && (
-          <TouchableOpacity style={styles.resetButton} onPress={handleResetFilters}>
-            <Text style={styles.resetButtonText}>Сбросить</Text>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={[styles.filterButton, hasActiveFilters && styles.filterButtonActive]}
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Text style={[styles.filterButtonText, hasActiveFilters && styles.filterButtonTextActive]}>
+              🔽 Фильтр {hasActiveFilters && '✓'}
+            </Text>
           </TouchableOpacity>
-        )}
+          {hasActiveFilters && (
+            <TouchableOpacity style={styles.resetButton} onPress={handleResetFilters}>
+              <Text style={styles.resetButtonText}>Сбросить</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <FlatList
@@ -177,9 +206,15 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 4,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    flex: 1,
     gap: 12,
   },
   filterButton: {
@@ -210,6 +245,18 @@ const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 14,
     color: '#DC3545',
+    fontWeight: '500',
+  },
+  logoutButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    backgroundColor: '#DC3545',
+    borderRadius: 10,
+    marginLeft: 12,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '500',
   },
   card: {

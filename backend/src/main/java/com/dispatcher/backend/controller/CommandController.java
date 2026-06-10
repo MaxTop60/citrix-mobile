@@ -5,9 +5,14 @@ import com.dispatcher.backend.dto.SendCommandRequest;
 import com.dispatcher.backend.entity.Command;
 import com.dispatcher.backend.entity.DriverResponse;
 import com.dispatcher.backend.entity.User;
+import com.dispatcher.backend.entity.Event;
+import com.dispatcher.backend.entity.Driver;
+import com.dispatcher.backend.repository.DriverRepository;
 import com.dispatcher.backend.repository.DriverResponseRepository;
 import com.dispatcher.backend.repository.UserRepository;
 import com.dispatcher.backend.service.CommandService;
+import com.dispatcher.backend.service.EventService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +37,12 @@ public class CommandController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EventService eventService;
+
+    @Autowired
+    private DriverRepository driverRepository;
+
     // Получить текущего пользователя из JWT токена
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -55,14 +66,14 @@ public class CommandController {
         return dto;
     }
 
-    // GET /api/commands — получить команды только для текущего водителя
-    @GetMapping
-    public List<CommandDto> getAllCommands() {
+    // GET /api/commands/my — получить команды только для текущего водителя
+    @GetMapping("/my")
+    public List<CommandDto> getMyCommands() {
         User currentUser = getCurrentUser();
         UUID driverId = currentUser.getDriverId();
 
         if (driverId == null) {
-            return List.of(); // Водитель не привязан
+            return List.of();
         }
 
         List<Command> commands = commandService.getCommandsByDriverId(driverId);
@@ -86,15 +97,23 @@ public class CommandController {
                 .collect(Collectors.toList());
     }
 
-    // POST /api/commands — отправить команду водителю (только SMS)
+    // POST /api/commands — отправить команду (driverId определяется автоматически)
     @PostMapping
-    public CommandDto sendCommand(@RequestBody SendCommandRequest request,
-            @RequestParam UUID driverId) {
+    public CommandDto sendCommand(@RequestBody SendCommandRequest request) {
+        // Находим событие
+        Event event = eventService.getEventById(request.getEventId());
+        if (event == null) {
+            throw new RuntimeException("Event not found");
+        }
+
+        // Получаем водителя по транспортному средству
+        Driver driver = driverRepository.findByVehicle_VehicleId(event.getVehicle().getVehicleId())
+                .orElseThrow(() -> new RuntimeException("Driver not found for this vehicle"));
+
         Command saved = commandService.sendCommand(
                 request.getEventId(),
                 request.getMessage(),
-                "SMS",
-                driverId);
+                driver.getDriverId());
         return convertToDto(saved);
     }
 

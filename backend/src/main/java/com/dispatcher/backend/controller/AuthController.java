@@ -6,13 +6,18 @@ import com.dispatcher.backend.dto.RegisterRequest;
 import com.dispatcher.backend.entity.Client;
 import com.dispatcher.backend.entity.Dispatcher;
 import com.dispatcher.backend.entity.Driver;
+import com.dispatcher.backend.entity.FcmToken;
 import com.dispatcher.backend.entity.User;
 import com.dispatcher.backend.repository.ClientRepository;
 import com.dispatcher.backend.repository.DispatcherRepository;
 import com.dispatcher.backend.repository.DriverRepository;
 import com.dispatcher.backend.repository.UserRepository;
+import com.dispatcher.backend.repository.FcmTokenRepository;
 import com.dispatcher.backend.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -43,8 +50,18 @@ public class AuthController {
   @Autowired
   private PasswordEncoder passwordEncoder;
 
+  @Autowired
+  private FcmTokenRepository fcmTokenRepository;
+
+  // Получить текущего пользователя из JWT токена
+  private User getCurrentUser() {
+    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+    return userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+  }
+
   @PostMapping("/login")
-  public AuthResponse login(@RequestBody LoginRequest request) {
+  public Map<String, Object> login(@RequestBody LoginRequest request) {
     User user = userRepository.findByEmail(request.getEmail())
         .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -53,7 +70,13 @@ public class AuthController {
     }
 
     String token = jwtService.generateToken(user);
-    return new AuthResponse(token, user.getEmail(), user.getRole());
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("token", token);
+    response.put("email", user.getEmail());
+    response.put("role", user.getRole());
+    response.put("userId", user.getUserId());
+    return response;
   }
 
   @PostMapping("/register")
@@ -95,7 +118,9 @@ public class AuthController {
         dispatcher.setEmail(request.getEmail());
         dispatcher.setPhone(request.getPhone() != null ? request.getPhone() : "");
         if (client != null) {
-          dispatcher.setClient(client); // Привязываем к клиенту
+          dispatcher.setClient(client);
+          // ВАЖНО: сохраняем client_id в таблицу users
+          user.setClientId(client.getClientId());
         }
         dispatcher = dispatcherRepository.save(dispatcher);
         profileId = dispatcher.getDispatcherId();
@@ -107,7 +132,9 @@ public class AuthController {
         driver.setFullName(request.getFullName() != null ? request.getFullName() : "Новый водитель");
         driver.setPhone(request.getPhone() != null ? request.getPhone() : "");
         if (client != null) {
-          driver.setClient(client); // Привязываем к клиенту
+          driver.setClient(client);
+          // ВАЖНО: сохраняем client_id в таблицу users
+          user.setClientId(client.getClientId());
         }
         driver = driverRepository.save(driver);
         profileId = driver.getDriverId();
@@ -126,6 +153,7 @@ public class AuthController {
     response.put("token", token);
     response.put("email", user.getEmail());
     response.put("role", user.getRole());
+    response.put("userId", user.getUserId());
     response.put("profileId", profileId);
 
     return response;
@@ -135,5 +163,71 @@ public class AuthController {
   @GetMapping("/clients")
   public List<Client> getAllClients() {
     return clientRepository.findAll();
+  }
+
+  @PostMapping("/fcm-token")
+  public ResponseEntity<?> saveFcmToken(@RequestBody Map<String, String> request) {
+    try {
+      String token = request.get("token");
+      String userIdStr = request.get("userId");
+
+      // Проверяем обязательные поля
+      if (userIdStr == null || token == null) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "userId and token are required"));
+      }
+
+      UUID userId;
+      try {
+        userId = UUID.fromString(userIdStr);
+      } catch (IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "Invalid userId format"));
+      }
+
+      // Находим пользователя
+      User user = userRepository.findById(userId).orElse(null);
+      if (user == null) {
+        return ResponseEntity.status(404).body(Map.of(
+            "error", "User not found"));
+      }
+
+      // Проверяем, что пользователь — водитель
+      UUID driverId = user.getDriverId();
+      if (driverId == null) {
+        return ResponseEntity.badRequest().body(Map.of(
+            "error", "User is not a driver. Only drivers can register FCM tokens."));
+      }
+
+      // Находим водителя
+      Driver driver = driverRepository.findById(driverId).orElse(null);
+      if (driver == null) {
+        return ResponseEntity.status(404).body(Map.of(
+            "error", "Driver not found for this user"));
+      }
+
+      // Сохраняем или обновляем токен
+      Optional<FcmToken> existing = fcmTokenRepository.findByDriver_DriverId(driverId);
+      if (existing.isPresent()) {
+        FcmToken fcmToken = existing.get();
+        fcmToken.setFcmToken(token);
+        fcmToken.setLastUsedAt(LocalDateTime.now());
+        fcmTokenRepository.save(fcmToken);
+        System.out.println("✅ FCM token updated for driver: " + driverId);
+      } else {
+        FcmToken fcmToken = new FcmToken(driver, token);
+        fcmTokenRepository.save(fcmToken);
+        System.out.println("✅ New FCM token saved for driver: " + driverId);
+      }
+
+      return ResponseEntity.ok(Map.of(
+          "message", "FCM token saved successfully",
+          "driverId", driverId.toString()));
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(500).body(Map.of(
+          "error", "Internal server error: " + e.getMessage()));
+    }
   }
 }

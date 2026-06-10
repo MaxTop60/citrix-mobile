@@ -7,10 +7,12 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../app/store';
 import { fetchDriverCommands, DriverCommand } from '../../events/model/eventsSlice';
+import { logout } from '../../auth/model/authSlice';
 
 const getStatusText = (status: string): string => {
   switch (status) {
@@ -65,6 +67,27 @@ const DriverCommandsScreen = ({ navigation }: any) => {
     setRefreshing(false);
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Выход',
+      'Вы уверены, что хотите выйти?',
+      [
+        { text: 'Отмена', style: 'cancel' },
+        { 
+          text: 'Выйти', 
+          style: 'destructive',
+          onPress: async () => {
+            await dispatch(logout());
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            });
+          }
+        },
+      ]
+    );
+  };
+
   const renderCommand = ({ item }: { item: DriverCommand }) => (
     <TouchableOpacity
       style={styles.card}
@@ -91,26 +114,60 @@ const DriverCommandsScreen = ({ navigation }: any) => {
   }
 
   return (
-    <FlatList
-      data={commands}
-      keyExtractor={(item) => item.commandId}
-      renderItem={renderCommand}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>Нет команд</Text>
-        </View>
-      }
-      contentContainerStyle={styles.list}
-    />
+    <>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Выйти</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={commands}
+        keyExtractor={(item) => item.commandId}
+        renderItem={renderCommand}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListEmptyComponent={
+          <View style={styles.center}>
+            <Text style={styles.emptyText}>Нет команд</Text>
+          </View>
+        }
+        contentContainerStyle={styles.list}
+      />
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   list: {
     padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  logoutButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    backgroundColor: '#DC3545',
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
   },
   card: {
     backgroundColor: '#fff',

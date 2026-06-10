@@ -3,7 +3,7 @@ import { apiClient } from '../../../shared/api/client';
 import { storage } from '../../../shared/lib/storage';
 
 interface AuthState {
-  user: { email: string; role: string } | null;
+  user: { email: string; role: string; userId: string } | null;
   token: string | null;
   isLoading: boolean;
   error: string | null;
@@ -22,10 +22,10 @@ export const login = createAsyncThunk(
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await apiClient.post('/auth/login', { email, password });
-      const { token, email: userEmail, role } = response.data;
+      const { token, email: userEmail, role, userId } = response.data;  // ← добавили userId
       await storage.setToken(token);
-      await storage.setUser({ email: userEmail, role });
-      return { token, user: { email: userEmail, role } };
+      await storage.setUser({ email: userEmail, role, userId });
+      return { token, user: { email: userEmail, role, userId } };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
     }
@@ -59,10 +59,10 @@ export const register = createAsyncThunk(
         phone,
         clientId 
       });
-      const { token, email: userEmail, role: userRole, profileId } = response.data;
+      const { token, email: userEmail, role: userRole, userId } = response.data;  // ← изменили profileId на userId
       await storage.setToken(token);
-      await storage.setUser({ email: userEmail, role: userRole, profileId });
-      return { token, user: { email: userEmail, role: userRole, profileId } };
+      await storage.setUser({ email: userEmail, role: userRole, userId });
+      return { token, user: { email: userEmail, role: userRole, userId } };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed');
     }
@@ -93,7 +93,11 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.token = action.payload.token;
-        state.user = action.payload.user;
+        state.user = {
+          email: action.payload.user.email,
+          role: action.payload.user.role,
+          userId: action.payload.user.userId,
+        };
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -107,7 +111,11 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.token = action.payload.token;
-        state.user = action.payload.user;
+        state.user = {
+          email: action.payload.user.email,
+          role: action.payload.user.role,
+          userId: action.payload.user.userId,
+        };
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;

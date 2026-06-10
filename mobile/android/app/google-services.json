@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "355742959931",
+    "project_id": "dispatcher-notifications-4c877",
+    "storage_bucket": "dispatcher-notifications-4c877.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355742959931:android:5df5f65431fc6ce2cc0f1e",
+        "android_client_info": {
+          "package_name": "com.dispatcherapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKkymmk9SzdE6dnj-0RLUYER83jHQyB8E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

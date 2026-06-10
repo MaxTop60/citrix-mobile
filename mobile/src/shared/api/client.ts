@@ -14,6 +14,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
+    console.log('🔑 Токен для запроса:', token ? `${token.substring(0, 20)}...` : 'НЕТ ТОКЕНА');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

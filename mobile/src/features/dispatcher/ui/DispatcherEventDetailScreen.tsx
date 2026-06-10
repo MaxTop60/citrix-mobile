@@ -63,13 +63,10 @@ const DispatcherEventDetailScreen = ({ route, navigation }: any) => {
 
     setSending(true);
     try {
-      // TODO: заменить driverId на реальный ID водителя
-      const driverId = 'd4a5e6f7-8b9c-0d1e-2f3a-4b5c6d7e8f9a';
+      // driverId больше не передаём
       await dispatch(sendCommand({
         eventId,
         message: commandMessage,
-        channel: 'SMS',
-        driverId,
       })).unwrap();
       Alert.alert('Успех', 'Команда отправлена водителю');
       setCommandMessage('');
