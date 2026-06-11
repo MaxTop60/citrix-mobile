@@ -18,4 +18,5 @@ public interface DriverRepository extends JpaRepository<Driver, UUID> {
   Optional<Driver> findByPhone(String phone);
 
   Optional<Driver> findByTelegramId(String telegramId);
+
 }

@@ -7,6 +7,7 @@ import { RootState } from '../app/store';
 import ClientDashboardScreen from '../features/client/ui/ClientDashboardScreen';
 import ClientVehiclesScreen from '../features/client/ui/ClientVehiclesScreen';
 import ClientReportsScreen from '../features/client/ui/ClientReportsScreen';
+import ClientDriversScreen from '../features/client/ui/ClientDriversScreen';
 
 // Dispatcher экраны
 import DispatcherEventsScreen from '../features/dispatcher/ui/DispatcherEventsScreen';
@@ -22,6 +23,7 @@ const ClientStack = () => (
   <Stack.Navigator>
     <Stack.Screen name="Dashboard" component={ClientDashboardScreen} options={{ title: 'Панель управления' }} />
     <Stack.Screen name="Vehicles" component={ClientVehiclesScreen} options={{ title: 'Транспорт' }} />
+    <Stack.Screen name="Drivers" component={ClientDriversScreen} options={{ title: 'Водители' }} />
     <Stack.Screen name="Reports" component={ClientReportsScreen} options={{ title: 'Отчёты' }} />
   </Stack.Navigator>
 );

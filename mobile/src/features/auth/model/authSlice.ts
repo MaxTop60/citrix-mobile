@@ -1,13 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { apiClient } from '../../../shared/api/client';
 import { storage } from '../../../shared/lib/storage';
-
-interface AuthState {
-  user: { email: string; role: string; userId: string } | null;
-  token: string | null;
-  isLoading: boolean;
-  error: string | null;
-}
+import { authApi } from '../api/authApi';
+import { AuthState, LoginRequest, RegisterRequest } from '../../../types';
 
 const initialState: AuthState = {
   user: null,
@@ -16,61 +10,36 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Асинхронный thunk для логина
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
+  async (data: LoginRequest, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post('/auth/login', { email, password });
-      const { token, email: userEmail, role, userId } = response.data;  // ← добавили userId
-      await storage.setToken(token);
-      await storage.setUser({ email: userEmail, role, userId });
-      return { token, user: { email: userEmail, role, userId } };
+      const response = await authApi.login(data);
+      await storage.setToken(response.token);
+      await storage.setUser({ email: response.email, role: response.role, userId: response.userId });
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
     }
   }
 );
 
-// Асинхронный thunk для регистрации
 export const register = createAsyncThunk(
   'auth/register',
-  async ({ 
-    email, 
-    password, 
-    role, 
-    fullName, 
-    phone,
-    clientId  
-  }: { 
-    email: string; 
-    password: string; 
-    role: string; 
-    fullName: string; 
-    phone: string;
-    clientId?: string; 
-  }, { rejectWithValue }) => {
+  async (data: RegisterRequest, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post('/auth/register', { 
-        email, 
-        password, 
-        role, 
-        fullName, 
-        phone,
-        clientId 
-      });
-      const { token, email: userEmail, role: userRole, userId } = response.data;  // ← изменили profileId на userId
-      await storage.setToken(token);
-      await storage.setUser({ email: userEmail, role: userRole, userId });
-      return { token, user: { email: userEmail, role: userRole, userId } };
+      const response = await authApi.register(data);
+      await storage.setToken(response.token);
+      await storage.setUser({ email: response.email, role: response.role, userId: response.userId });
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed');
     }
   }
 );
 
-// Асинхронный thunk для выхода
 export const logout = createAsyncThunk('auth/logout', async () => {
+  await authApi.logout();
   await storage.clear();
   return null;
 });
@@ -85,7 +54,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Логин
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -94,16 +62,15 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.token = action.payload.token;
         state.user = {
-          email: action.payload.user.email,
-          role: action.payload.user.role,
-          userId: action.payload.user.userId,
+          userId: action.payload.userId,
+          email: action.payload.email,
+          role: action.payload.role as any,
         };
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // Регистрация
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -112,16 +79,15 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.token = action.payload.token;
         state.user = {
-          email: action.payload.user.email,
-          role: action.payload.user.role,
-          userId: action.payload.user.userId,
+          userId: action.payload.userId,
+          email: action.payload.email,
+          role: action.payload.role as any,
         };
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
-      // Выход
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.token = null;

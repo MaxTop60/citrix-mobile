@@ -84,4 +84,14 @@ public class DriverService {
   public void deleteDriver(UUID driverId) {
     driverRepository.deleteById(driverId);
   }
+
+  public Driver unassignVehicle(UUID driverId) {
+    Driver existing = getDriverById(driverId);
+    if (existing == null) {
+      return null;
+    }
+    // Обновляем только vehicle_id, не трогая остальные поля
+    existing.setVehicle(null);
+    return driverRepository.save(existing);
+  }
 }

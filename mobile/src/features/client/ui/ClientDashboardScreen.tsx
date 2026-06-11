@@ -79,6 +79,12 @@ const ClientDashboardScreen = ({ navigation }: any) => {
           <Text style={styles.menuTitle}>Отчёты</Text>
           <Text style={styles.menuDescription}>Просмотр и экспорт</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Drivers')}>
+          <Text style={styles.menuIcon}>👨‍✈️</Text>
+          <Text style={styles.menuTitle}>Водители</Text>
+          <Text style={styles.menuDescription}>Управление водителями</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
