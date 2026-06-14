@@ -14,6 +14,10 @@ import com.dispatcher.backend.repository.DriverRepository;
 import com.dispatcher.backend.repository.UserRepository;
 import com.dispatcher.backend.repository.FcmTokenRepository;
 import com.dispatcher.backend.security.JwtService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -157,6 +161,13 @@ public class AuthController {
     response.put("profileId", profileId);
 
     return response;
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    // Spring Security обработает logout автоматически,
+    // если настроен logoutUrl
+    return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
   }
 
   // Получить список клиентов (для выбора при регистрации диспетчера/водителя)

@@ -1,11 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { eventsApi } from '../api/eventsApi';
 import { Event, Command, FilterState } from '../../../types';
+import {apiClient} from '../../../shared/api/client';
 
 interface EventsState {
   events: Event[];
   filteredEvents: Event[];
   currentEvent: Event | null;
+  currentCommand: Command | null;
   commands: Command[];
   isLoading: boolean;
   error: string | null;
@@ -16,6 +18,7 @@ const initialState: EventsState = {
   events: [],
   filteredEvents: [],
   currentEvent: null,
+  currentCommand: null,
   commands: [],
   isLoading: false,
   error: null,
@@ -78,6 +81,42 @@ export const fetchDriverCommands = createAsyncThunk(
   }
 );
 
+export const fetchCommandById = createAsyncThunk(
+  'events/fetchCommandById',
+  async (commandId: string, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get(`/commands/${commandId}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch command');
+    }
+  }
+);
+
+// Подтвердить команду (водитель)
+export const confirmCommand = createAsyncThunk(
+  'events/confirmCommand',
+  async ({ 
+    commandId, 
+    responseType, 
+    content 
+  }: { 
+    commandId: string; 
+    responseType: string; 
+    content: string; 
+  }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post(`/commands/${commandId}/confirm`, { 
+        responseType, 
+        content 
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to confirm command');
+    }
+  }
+);
+
 const eventsSlice = createSlice({
   name: 'events',
   initialState,
@@ -117,6 +156,35 @@ const eventsSlice = createSlice({
       .addCase(fetchDriverCommands.fulfilled, (state, action) => {
         state.isLoading = false;
         state.commands = action.payload;
+      })
+      .addCase(fetchCommandById.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchCommandById.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentCommand = action.payload;  // ← сохраняем команду
+      })
+      .addCase(fetchCommandById.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+            .addCase(confirmCommand.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(confirmCommand.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.currentCommand = action.payload;
+        // Обновляем команду в списке команд
+        const index = state.commands.findIndex(c => c.commandId === action.payload.commandId);
+        if (index !== -1) {
+          state.commands[index] = action.payload;
+        }
+      })
+      .addCase(confirmCommand.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

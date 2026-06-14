@@ -1,7 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://192.168.1.2:8080/api';
+
+export const API_URL = 'http://10.0.2.2:8080/api';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -14,7 +15,9 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
-    console.log('🔑 Токен для запроса:', token ? `${token.substring(0, 20)}...` : 'НЕТ ТОКЕНА');
+    console.log(` ${config.method?.toUpperCase()} ${config.url}`);
+    console.log(`   URL: ${API_URL}${config.url}`);
+    console.log('Токен для запроса:', token ? `${token.substring(0, 20)}...` : 'НЕТ ТОКЕНА');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,4 +41,3 @@ export const fetchClients = async () => {
   const response = await apiClient.get('/auth/clients');
   return response.data;
 };
-

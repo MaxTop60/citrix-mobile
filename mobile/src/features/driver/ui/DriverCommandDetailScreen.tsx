@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../../app/store';
-import { fetchCommandById, confirmCommand } from '../../events/model/eventsSlice';
+import { confirmCommand, fetchCommandById } from '../../../features/events/model/eventsSlice';
+
 
 const getStatusText = (status: string): string => {
   switch (status) {
